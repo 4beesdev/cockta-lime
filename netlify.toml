@@ -6,3 +6,10 @@
   node_bundler = "esbuild"
   directory = "netlify/functions"
   included_files = ["dist/server/**"]
+
+# Static fajlovi iz dist/client imaju prednost (filesystem first);
+# sve ostalo ide na SSR funkciju.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
