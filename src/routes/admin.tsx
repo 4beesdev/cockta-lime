@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAdminPassword } from "#/lib/admin-auth";
@@ -7,15 +8,22 @@ import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 function extractErrorMessage(err: unknown): string {
-	if (!(err instanceof Error)) return "Nepoznata greška.";
-	const msg = err.message;
-	if (msg.includes("Unauthorized"))
+	const raw =
+		err instanceof ConvexError
+			? typeof err.data === "string"
+				? err.data
+				: err.message
+			: err instanceof Error
+				? err.message
+				: "";
+	if (!raw) return "Nepoznata greška.";
+	if (raw.includes("Unauthorized"))
 		return "Pogrešna lozinka ili sesija je istekla.";
-	if (msg.includes("ADMIN_PASSWORD not configured"))
+	if (raw.includes("ADMIN_PASSWORD not configured"))
 		return "Server nije konfigurisan.";
-	const match = msg.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+	const match = raw.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
 	if (match?.[1]) return match[1];
-	return msg.length > 200 ? "Greška pri komunikaciji sa serverom." : msg;
+	return raw.length > 200 ? "Greška pri komunikaciji sa serverom." : raw;
 }
 
 export const Route = createFileRoute("/admin")({

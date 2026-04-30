@@ -1,10 +1,10 @@
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 
 function assertAdmin(password: string) {
   const expected = process.env.ADMIN_PASSWORD
-  if (!expected) throw new Error('ADMIN_PASSWORD not configured')
-  if (password !== expected) throw new Error('Unauthorized')
+  if (!expected) throw new ConvexError('ADMIN_PASSWORD not configured')
+  if (password !== expected) throw new ConvexError('Unauthorized')
 }
 
 export const submitMessage = mutation({
