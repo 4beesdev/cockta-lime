@@ -1,6 +1,7 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Toaster } from "sonner";
 
 import ConvexProvider from "../integrations/convex/provider";
 
@@ -27,6 +28,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<body className="font-sans antialiased wrap-anywhere selection:bg-[rgba(79,184,178,0.24)]">
 				<ConvexProvider>
 					{children}
+					<Toaster
+						position="top-center"
+						richColors
+						closeButton
+						toastOptions={{
+							style: {
+								fontFamily: "'Roboto Mono', ui-monospace, monospace",
+							},
+						}}
+					/>
 					<TanStackDevtools
 						config={{ position: "bottom-right" }}
 						plugins={[

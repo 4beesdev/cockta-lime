@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/")({
@@ -62,6 +63,7 @@ function HomePage() {
 						? err.message
 						: "Nešto je puklo, probaj ponovo.";
 				setSubmitError(message);
+				toast.error(message);
 			}
 		},
 	});

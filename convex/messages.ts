@@ -38,6 +38,14 @@ export const submitMessage = mutation({
   },
 })
 
+export const verifyAdminPassword = mutation({
+  args: { adminPassword: v.string() },
+  handler: async (_ctx, args) => {
+    assertAdmin(args.adminPassword)
+    return true
+  },
+})
+
 export const getPendingMessages = query({
   args: { adminPassword: v.string() },
   handler: async (ctx, args) => {

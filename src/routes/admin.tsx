@@ -1,9 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAdminPassword } from "#/lib/admin-auth";
 import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
+
+function extractErrorMessage(err: unknown): string {
+	if (!(err instanceof Error)) return "Nepoznata greška.";
+	const msg = err.message;
+	if (msg.includes("Unauthorized"))
+		return "Pogrešna lozinka ili sesija je istekla.";
+	if (msg.includes("ADMIN_PASSWORD not configured"))
+		return "Server nije konfigurisan.";
+	const match = msg.match(/Uncaught Error:\s*(.+?)(?:\n|$)/);
+	if (match?.[1]) return match[1];
+	return msg.length > 200 ? "Greška pri komunikaciji sa serverom." : msg;
+}
 
 export const Route = createFileRoute("/admin")({
 	component: AdminPage,
@@ -73,7 +86,8 @@ class AdminErrorBoundary extends React.Component<
 	static getDerivedStateFromError() {
 		return { hasError: true };
 	}
-	componentDidCatch() {
+	componentDidCatch(error: Error) {
+		toast.error(extractErrorMessage(error));
 		this.props.onError();
 	}
 	render() {
@@ -87,15 +101,27 @@ class AdminErrorBoundary extends React.Component<
 function PasswordGate({ onSubmit }: { onSubmit: (value: string) => void }) {
 	const [value, setValue] = useState("");
 	const [error, setError] = useState<string | null>(null);
+	const [verifying, setVerifying] = useState(false);
+	const verifyPassword = useMutation(api.messages.verifyAdminPassword);
 
-	function handleSubmit(e: React.FormEvent) {
+	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		if (!value.trim()) {
+		const trimmed = value.trim();
+		if (!trimmed) {
 			setError("Upiši lozinku.");
 			return;
 		}
 		setError(null);
-		onSubmit(value.trim());
+		setVerifying(true);
+		try {
+			await verifyPassword({ adminPassword: trimmed });
+			onSubmit(trimmed);
+		} catch (err) {
+			const m = extractErrorMessage(err);
+			setError(m);
+			toast.error(m);
+			setVerifying(false);
+		}
 	}
 
 	return (
@@ -134,13 +160,14 @@ function PasswordGate({ onSubmit }: { onSubmit: (value: string) => void }) {
 						</div>
 						<button
 							type="submit"
-							className="w-full cursor-pointer rounded-[12px] px-6 py-4 text-[18px] font-bold tracking-wide text-[#222529] uppercase shadow-sm transition active:scale-[0.99]"
+							disabled={verifying}
+							className="w-full cursor-pointer rounded-[12px] px-6 py-4 text-[18px] font-bold tracking-wide text-[#222529] uppercase shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
 							style={{
 								backgroundImage: YELLOW_BUTTON_BG,
 								fontFamily: FONT_CONDENSED,
 							}}
 						>
-							Uđi
+							{verifying ? "Proveravam…" : "Uđi"}
 						</button>
 					</form>
 				</div>
@@ -245,8 +272,8 @@ function AdminDashboard({
 	};
 
 	const handleSetWallLayout = (rows: number, cols: number) => {
-		setWallSettings({ adminPassword: password, rows, cols }).catch(() => {
-			// no-op: ErrorBoundary će uhvatiti unauthorized
+		setWallSettings({ adminPassword: password, rows, cols }).catch((err) => {
+			toast.error(extractErrorMessage(err));
 		});
 	};
 
@@ -254,8 +281,8 @@ function AdminDashboard({
 		messageId: Id<"messages">,
 		status: MessageStatus,
 	) => {
-		setStatus({ messageId, adminPassword: password, status }).catch(() => {
-			// no-op: ErrorBoundary će uhvatiti unauthorized
+		setStatus({ messageId, adminPassword: password, status }).catch((err) => {
+			toast.error(extractErrorMessage(err));
 		});
 	};
 
@@ -534,10 +561,12 @@ function EditMessageModal({
 				text: textTrim,
 				signature: signatureTrim || undefined,
 			});
+			toast.success("Poruka sačuvana.");
 			onClose();
 		} catch (err) {
-			const m = err instanceof Error ? err.message : "Greška pri čuvanju.";
+			const m = extractErrorMessage(err);
 			setError(m);
+			toast.error(m);
 			setSaving(false);
 		}
 	};
