@@ -24,6 +24,8 @@ function WallPage() {
 	const settings = useQuery(api.messages.getWallSettings, {});
 	const rows = settings?.rows ?? 3;
 	const cols = settings?.cols ?? 3;
+	const highlightTheme = settings?.theme ?? "blue";
+	const highlightedMessageId = settings?.highlightedMessageId ?? null;
 	const limit = rows * cols;
 
 	const messages = useQuery(api.messages.getApprovedMessages, { limit });
@@ -138,12 +140,40 @@ function WallPage() {
 											text={msg.text}
 											signature={msg.signature}
 											createdAt={msg.createdAt}
+											isHighlighted={highlightedMessageId === msg._id}
+											highlightTheme={highlightTheme}
 										/>
 									))}
 								</div>
 							))}
 				</section>
 			)}
+
+			{/* QR poziv — iznad footer-a */}
+			<section className="relative z-10 flex w-full items-center justify-center px-6 py-2">
+				<div className="flex items-center">
+					<div className="flex h-8.5 items-center rounded-l-lg bg-[#aabd37] px-3 text-[clamp(11px,1vw,16px)] font-bold tracking-tight whitespace-nowrap text-white uppercase">
+						Skeniraj QR kod na narukvici
+					</div>
+					<img
+						src="/figma/qr-code.svg"
+						alt="QR kod"
+						className="size-18 shrink-0 select-none"
+					/>
+					<div className="flex h-8.5 items-center bg-[#aabd37] px-3 text-[clamp(11px,1vw,16px)] font-bold tracking-tight whitespace-nowrap text-white uppercase">
+						i pošalji poruku nekome ko ti se sviđa
+					</div>
+					<img
+						src="/figma/lime.svg"
+						alt=""
+						aria-hidden="true"
+						className="h-18 w-17.5 shrink-0 select-none"
+					/>
+					<div className="flex h-8.5 items-center rounded-r-lg bg-[#aabd37] px-3 text-[clamp(11px,1vw,16px)] font-bold tracking-tight whitespace-nowrap text-white uppercase">
+						#AjЛajmЈy
+					</div>
+				</div>
+			</section>
 
 			{/* Footer marquee */}
 			<footer className="relative z-10 w-full overflow-hidden py-2">
@@ -184,30 +214,96 @@ function MessageCard({
 	text,
 	signature,
 	createdAt,
+	isHighlighted,
+	highlightTheme,
 }: {
 	index: number;
 	recipient: string;
 	text: string;
 	signature?: string;
 	createdAt: number;
+	isHighlighted: boolean;
+	highlightTheme: "blue" | "yellow";
 }) {
 	const time = useMemo(() => formatHHmm(new Date(createdAt)), [createdAt]);
+
+	const isYellow = highlightTheme === "yellow";
+	const bg = isHighlighted
+		? isYellow
+			? "#f8cc04"
+			: "#2e81a3"
+		: "#ffffff";
+	const borderColor = isHighlighted
+		? isYellow
+			? "#2e81a3"
+			: "#f8cd04"
+		: "#ffffff";
+	const recipientColor = isHighlighted
+		? isYellow
+			? "#3d95b9"
+			: "#f8cd04"
+		: "#3d95b9";
+	const textColor = isHighlighted ? "#ffffff" : "#222529";
+
 	return (
 		<div
-			className="card-enter flex flex-col gap-3 rounded-xl border border-white bg-white p-3"
-			style={{ animationDelay: `${index * 80}ms` }}
+			className="card-enter relative flex flex-col gap-3 overflow-visible rounded-xl border-4 p-2 transition-[background-color,border-color,color] duration-700 ease-out"
+			style={{
+				animationDelay: `${index * 80}ms`,
+				backgroundColor: bg,
+				borderColor: borderColor,
+				color: textColor,
+			}}
 		>
-			<p className="text-[clamp(11px,0.95vw,14px)] font-medium tracking-tight text-[#3d95b9] uppercase">
+			{/* Paper grain overlay (samo na istaknutoj) */}
+			<div
+				aria-hidden="true"
+				className="pointer-events-none absolute inset-0 rounded-xl mix-blend-overlay transition-opacity duration-700 ease-out"
+				style={{
+					backgroundImage: "url(/figma/image9.png)",
+					backgroundSize: "200px 200px",
+					backgroundRepeat: "repeat",
+					opacity: isHighlighted ? 1 : 0,
+				}}
+			/>
+
+			{/* Srca u gornjem desnom uglu — oba u DOM-u, scale 0↔1 prema temi */}
+			{(["yellow", "blue"] as const).map((t) => {
+				const visible = isHighlighted && highlightTheme === t;
+				return (
+					<img
+						key={t}
+						src={t === "yellow" ? "/figma/heart-blue.svg" : "/figma/heart-yellow.svg"}
+						alt=""
+						aria-hidden="true"
+						className="pointer-events-none absolute -top-6 right-5 h-14.75 w-15.5 origin-center select-none transition-transform duration-700"
+						style={{
+							transform: visible ? "scale(1)" : "scale(0)",
+							transitionTimingFunction: visible
+								? "cubic-bezier(0.34, 1.56, 0.64, 1)"
+								: "cubic-bezier(0.4, 0, 0.6, 1)",
+						}}
+					/>
+				);
+			})}
+
+			<p
+				className="relative z-10 text-[clamp(11px,0.95vw,14px)] font-medium tracking-tight transition-colors duration-700 ease-out"
+				style={{
+					color: recipientColor,
+					textTransform: isHighlighted ? "none" : "uppercase",
+				}}
+			>
 				{recipient}
 			</p>
-			<p className="text-[clamp(13px,1.1vw,16px)] leading-snug font-bold tracking-tight text-[#222529]">
+			<p
+				className="relative z-10 text-[clamp(13px,1.1vw,16px)] leading-snug font-bold tracking-tight transition-[text-transform] duration-700"
+				style={{ textTransform: isHighlighted ? "uppercase" : "none" }}
+			>
 				{text}
 			</p>
-			<div className="flex items-center justify-between text-[clamp(10px,0.9vw,14px)] font-medium tracking-tight text-[#222529] uppercase">
-				<span className="opacity-50">#AjЛajmЈy</span>
-				<span aria-hidden={!signature} className={signature ? "" : "opacity-0"}>
-					{signature || "—"}
-				</span>
+			<div className="relative z-10 flex items-center justify-between gap-2 text-[clamp(10px,0.9vw,14px)] font-medium tracking-tight uppercase">
+				<span>{signature ?? ""}</span>
 				<span className="tabular-nums opacity-50">{time}</span>
 			</div>
 		</div>

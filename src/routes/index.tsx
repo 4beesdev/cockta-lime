@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -20,11 +20,62 @@ const YELLOW_BUTTON_BG =
 
 const MARQUEE_KEYS = Array.from({ length: 24 }, (_, i) => `aj-marq-${i}`);
 
+const SUCCESS_VARIANTS: ReadonlyArray<{ emoji: string; text: string }> = [
+	{
+		emoji: "/figma/eyes.png",
+		text: "Možda će videti.\nMožda će se prepoznati.",
+	},
+	{
+		emoji: "/figma/emoji/clinking-glasses.png",
+		text: "Nazdravljamo na slepo.\nSve je spremno.",
+	},
+	{
+		emoji: "/figma/emoji/bullseye.png",
+		text: "Cilj poslat.\nDa pogodi.",
+	},
+	{
+		emoji: "/figma/emoji/hourglass.png",
+		text: "Strpi se.\nNije dugo.",
+	},
+	{
+		emoji: "/figma/emoji/envelope.png",
+		text: "Stigla je.\nDalje znaš sam.",
+	},
+	{
+		emoji: "/figma/emoji/shush.png",
+		text: "Ti znaš.\nMi ćutimo.",
+	},
+	{
+		emoji: "/figma/emoji/mirror-ball.png",
+		text: "Pesma traje.\nTvoja poruka takođe.",
+	},
+	{
+		emoji: "/figma/emoji/star.png",
+		text: "Bačeno gore.\nPadne gde padne.",
+	},
+	{
+		emoji: "/figma/emoji/herb.png",
+		text: "Sve je u redu.\nDiši.",
+	},
+];
+
+function pickSuccessVariantIndex(): number {
+	if (typeof window !== "undefined") {
+		const forced = new URLSearchParams(window.location.search).get("v");
+		if (forced !== null) {
+			const n = Number(forced);
+			if (Number.isInteger(n) && n >= 0 && n < SUCCESS_VARIANTS.length) {
+				return n;
+			}
+		}
+	}
+	return Math.floor(Math.random() * SUCCESS_VARIANTS.length);
+}
+
 function HomePage() {
-	const navigate = useNavigate();
 	const submitMessage = useMutation(api.messages.submitMessage);
 	const [submitError, setSubmitError] = useState<string | null>(null);
-	const [submitted, setSubmitted] = useState(false);
+	const [submittedVariant, setSubmittedVariant] = useState<number | null>(null);
 	const formCardRef = useRef<HTMLDivElement | null>(null);
 	const [recipientPlaceholder, setRecipientPlaceholder] = useState(
 		RECIPIENT_PLACEHOLDERS[0],
@@ -52,7 +103,7 @@ function HomePage() {
 					text: value.text.trim(),
 					signature: value.signature.trim() || undefined,
 				});
-				setSubmitted(true);
+				setSubmittedVariant(pickSuccessVariantIndex());
 				formCardRef.current?.scrollIntoView({
 					behavior: "smooth",
 					block: "center",
@@ -71,7 +122,7 @@ function HomePage() {
 	const handleSendAnother = () => {
 		form.reset();
 		setSubmitError(null);
-		setSubmitted(false);
+		setSubmittedVariant(null);
 	};
 
 	const scrollToForm = () => {
@@ -222,40 +273,39 @@ function HomePage() {
 					ref={formCardRef}
 					className="w-full rounded-[16px] bg-[#3d95b9] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.18)]"
 				>
-					{submitted ? (
+					{submittedVariant !== null ? (
 						<div className="flex min-h-[462px] flex-col gap-10">
 							<div className="flex flex-1 flex-col items-center justify-center gap-6">
 								<img
-									src="/figma/eyes.png"
+									src={SUCCESS_VARIANTS[submittedVariant].emoji}
 									alt=""
 									aria-hidden="true"
 									className="h-45 w-42 max-w-full select-none object-contain"
 								/>
-								<p className="w-full text-center text-[20px] leading-tight font-semibold text-white">
-									Možda će videti.
-									<br />
-									Možda će se prepoznati.
+								<p className="w-full text-center text-[20px] leading-tight font-semibold whitespace-pre-line text-white">
+									{SUCCESS_VARIANTS[submittedVariant].text}
 								</p>
 							</div>
-							<div className="flex w-full flex-col gap-4">
+							<div className="flex w-full flex-col items-center gap-3">
+								<p
+									className="text-center text-[18px] leading-none font-medium text-white uppercase"
+									style={{ fontFamily: fontCondensed }}
+								>
+									Idi do wall-a da vidiš svoju poruku…
+								</p>
+								<p
+									className="text-center text-[18px] leading-none font-medium text-white uppercase"
+									style={{ fontFamily: fontCondensed }}
+								>
+									ili
+								</p>
 								<button
 									type="button"
 									onClick={handleSendAnother}
 									className="w-full cursor-pointer rounded-[12px] border-2 border-white px-6 py-4 text-[18px] font-bold tracking-wide text-white uppercase transition active:scale-[0.99] hover:bg-white/10"
 									style={{ fontFamily: fontCondensed }}
 								>
-									Pošalji još jednu poruku
-								</button>
-								<button
-									type="button"
-									onClick={() => navigate({ to: "/wall" })}
-									className="w-full cursor-pointer rounded-[12px] px-6 py-4 text-[18px] font-bold tracking-wide text-[#222529] uppercase shadow-sm transition active:scale-[0.99]"
-									style={{
-										backgroundImage: YELLOW_BUTTON_BG,
-										fontFamily: fontCondensed,
-									}}
-								>
-									Idi do wall-a
+									Pošalji još jednu
 								</button>
 							</div>
 						</div>

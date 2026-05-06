@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
+import { Heart, Pencil } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAdminPassword } from "#/lib/admin-auth";
@@ -224,10 +225,10 @@ function StatusTabs({
 						key={tab}
 						type="button"
 						onClick={() => onChange(tab)}
-						className={`cursor-pointer rounded-full border-2 px-4 py-2 text-[14px] font-bold tracking-wide uppercase transition active:scale-[0.98] ${
+						className={`cursor-pointer rounded-full border-2 px-4 py-2 text-[13px] font-bold tracking-wide uppercase transition active:scale-[0.98] ${
 							active
 								? "border-[#f5cd21] bg-[#f5cd21] text-[#222529]"
-								: "border-white/60 bg-transparent text-white hover:bg-white/10"
+								: "border-[#222529]/20 bg-transparent text-[#222529]/70 hover:bg-[#222529]/5"
 						}`}
 						style={{ fontFamily: FONT_CONDENSED }}
 					>
@@ -235,7 +236,7 @@ function StatusTabs({
 						{count !== undefined && (
 							<span
 								className={`ml-2 inline-block rounded-full px-1.5 text-[12px] ${
-									active ? "bg-[#222529]/20" : "bg-white/20"
+									active ? "bg-[#222529]/20" : "bg-[#222529]/10"
 								}`}
 							>
 								{count}
@@ -271,6 +272,10 @@ function AdminDashboard({
 	const setStatus = useMutation(api.messages.setMessageStatus);
 	const wallSettings = useQuery(api.messages.getWallSettings, {});
 	const setWallSettings = useMutation(api.messages.setWallSettings);
+	const setWallTheme = useMutation(api.messages.setWallTheme);
+	const setHighlightedMessage = useMutation(
+		api.messages.setHighlightedMessage,
+	);
 
 	const counts: Record<StatusFilter, number | undefined> = {
 		pending: allMessages?.filter((m) => m.status === "pending").length,
@@ -281,6 +286,23 @@ function AdminDashboard({
 
 	const handleSetWallLayout = (rows: number, cols: number) => {
 		setWallSettings({ adminPassword: password, rows, cols }).catch((err) => {
+			toast.error(extractErrorMessage(err));
+		});
+	};
+
+	const handleSetTheme = (theme: "blue" | "yellow") => {
+		setWallTheme({ adminPassword: password, theme }).catch((err) => {
+			toast.error(extractErrorMessage(err));
+		});
+	};
+
+	const handleToggleHighlight = (messageId: Id<"messages">) => {
+		const isCurrentlyHighlighted =
+			wallSettings?.highlightedMessageId === messageId;
+		setHighlightedMessage({
+			adminPassword: password,
+			messageId: isCurrentlyHighlighted ? null : messageId,
+		}).catch((err) => {
 			toast.error(extractErrorMessage(err));
 		});
 	};
@@ -296,16 +318,39 @@ function AdminDashboard({
 
 	const [editing, setEditing] = useState<Doc<"messages"> | null>(null);
 
-	const renderActions = (msg: Doc<"messages">) => (
-		<div className="flex flex-wrap gap-2">
+	const renderActions = (msg: Doc<"messages">) => {
+		const isHighlighted = wallSettings?.highlightedMessageId === msg._id;
+		return (
+		<div className="flex flex-wrap items-center gap-2">
+			{/* Sekundarne akcije — ikone */}
 			<button
 				type="button"
 				onClick={() => setEditing(msg)}
-				className="cursor-pointer rounded-full border border-[#3d95b9] bg-white px-3 py-1.5 text-[12px] font-bold tracking-wide whitespace-nowrap text-[#3d95b9] uppercase transition hover:bg-[#3d95b9]/10 active:scale-[0.98]"
-				style={{ fontFamily: FONT_CONDENSED }}
+				aria-label="Izmeni poruku"
+				title="Izmeni"
+				className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-[#3d95b9] bg-white text-[#3d95b9] transition hover:bg-[#3d95b9]/10 active:scale-[0.95]"
 			>
-				Izmeni
+				<Pencil className="size-3.5" aria-hidden="true" />
 			</button>
+			<button
+				type="button"
+				onClick={() => handleToggleHighlight(msg._id)}
+				aria-label={isHighlighted ? "Skini isticanje" : "Istakni poruku"}
+				title={isHighlighted ? "Skini isticanje" : "Istakni"}
+				className={`inline-flex size-8 cursor-pointer items-center justify-center rounded-full transition active:scale-[0.95] ${
+					isHighlighted
+						? "bg-[#f5cd21] text-[#222529] hover:bg-[#f5cd21]/80"
+						: "border border-[#f5cd21] bg-white text-[#a07e00] hover:bg-[#f5cd21]/10"
+				}`}
+			>
+				<Heart
+					className="size-3.5"
+					fill={isHighlighted ? "currentColor" : "none"}
+					aria-hidden="true"
+				/>
+			</button>
+			{/* Razmak pre primarnih akcija */}
+			<span aria-hidden="true" className="mx-1 h-5 w-px bg-[#222529]/15" />
 			{msg.status !== "approved" && (
 				<button
 					type="button"
@@ -339,11 +384,12 @@ function AdminDashboard({
 			)}
 			*/}
 		</div>
-	);
+		);
+	};
 
 	return (
 		<AdminShell>
-			<div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6">
+			<div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
 				{/* Header */}
 				<header className="flex flex-wrap items-start justify-between gap-4">
 					<div>
@@ -367,75 +413,111 @@ function AdminDashboard({
 					</button>
 				</header>
 
-				{/* Wall settings — broj poruka na ekranu */}
-				<section className="flex flex-col gap-3 rounded-2xl bg-[#3d95b9] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
-					<div className="flex flex-wrap items-baseline justify-between gap-2">
-						<h2
-							className="text-[16px] leading-[26.56px] font-semibold text-white"
-							style={{ fontFamily: FONT_MONO }}
-						>
-							Broj poruka na zidu
-						</h2>
-						{wallSettings && (
-							<span className="text-[13px] text-white/70">
-								Trenutno:{" "}
-								<span className="font-semibold text-white">
-									{wallSettings.rows} × {wallSettings.cols} ={" "}
-									{wallSettings.rows * wallSettings.cols}
-								</span>
-							</span>
-						)}
-					</div>
-					<div className="flex flex-wrap gap-2">
-						{WALL_LAYOUT_PRESETS.map((p) => {
-							const active =
-								wallSettings?.rows === p.rows && wallSettings?.cols === p.cols;
-							return (
-								<button
-									key={`${p.rows}x${p.cols}`}
-									type="button"
-									onClick={() => handleSetWallLayout(p.rows, p.cols)}
-									className={`cursor-pointer rounded-full border-2 px-4 py-2 text-[14px] font-bold tracking-wide uppercase transition active:scale-[0.98] ${
-										active
-											? "border-[#f5cd21] bg-[#f5cd21] text-[#222529]"
-											: "border-white/60 bg-transparent text-white hover:bg-white/10"
-									}`}
-									style={{ fontFamily: FONT_CONDENSED }}
-								>
-									{p.rows} × {p.cols}
-									<span
-										className={`ml-2 inline-block rounded-full px-1.5 text-[12px] ${
-											active ? "bg-[#222529]/20" : "bg-white/20"
-										}`}
-									>
-										{p.rows * p.cols}
+				{/* Wall settings — sve u jednoj kartici */}
+				<section className="flex flex-col gap-5 rounded-2xl bg-[#3d95b9] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
+					<h2
+						className="text-[18px] leading-tight font-bold text-white"
+						style={{ fontFamily: FONT_MONO }}
+					>
+						Podešavanja zida
+					</h2>
+
+					{/* Broj poruka */}
+					<div className="flex flex-col gap-2">
+						<div className="flex flex-wrap items-baseline justify-between gap-2">
+							<h3 className="text-[13px] font-semibold tracking-wide text-white/80 uppercase">
+								Broj poruka na zidu
+							</h3>
+							{wallSettings && (
+								<span className="text-[13px] text-white/70">
+									Trenutno:{" "}
+									<span className="font-semibold text-white">
+										{wallSettings.rows} × {wallSettings.cols} ={" "}
+										{wallSettings.rows * wallSettings.cols}
 									</span>
-								</button>
-							);
-						})}
+								</span>
+							)}
+						</div>
+						<div className="flex flex-wrap gap-2">
+							{WALL_LAYOUT_PRESETS.map((p) => {
+								const active =
+									wallSettings?.rows === p.rows && wallSettings?.cols === p.cols;
+								return (
+									<button
+										key={`${p.rows}x${p.cols}`}
+										type="button"
+										onClick={() => handleSetWallLayout(p.rows, p.cols)}
+										className={`cursor-pointer rounded-full border-2 px-4 py-2 text-[14px] font-bold tracking-wide uppercase transition active:scale-[0.98] ${
+											active
+												? "border-[#f5cd21] bg-[#f5cd21] text-[#222529]"
+												: "border-white/60 bg-transparent text-white hover:bg-white/10"
+										}`}
+										style={{ fontFamily: FONT_CONDENSED }}
+									>
+										{p.rows} × {p.cols}
+										<span
+											className={`ml-2 inline-block rounded-full px-1.5 text-[12px] ${
+												active ? "bg-[#222529]/20" : "bg-white/20"
+											}`}
+										>
+											{p.rows * p.cols}
+										</span>
+									</button>
+								);
+							})}
+						</div>
+					</div>
+
+					{/* Tema isticanja */}
+					<div className="flex flex-col gap-2">
+						<h3 className="text-[13px] font-semibold tracking-wide text-white/80 uppercase">
+							Tema istaknute kartice
+						</h3>
+						<div className="flex flex-wrap gap-2">
+							{(["blue", "yellow"] as const).map((t) => {
+								const active = (wallSettings?.theme ?? "blue") === t;
+								return (
+									<button
+										key={t}
+										type="button"
+										onClick={() => handleSetTheme(t)}
+										className={`cursor-pointer rounded-full border-2 px-4 py-2 text-[14px] font-bold tracking-wide uppercase transition active:scale-[0.98] ${
+											active
+												? "border-[#f5cd21] bg-[#f5cd21] text-[#222529]"
+												: "border-white/60 bg-transparent text-white hover:bg-white/10"
+										}`}
+										style={{ fontFamily: FONT_CONDENSED }}
+									>
+										{t === "blue" ? "Plava" : "Žuta"}
+									</button>
+								);
+							})}
+						</div>
 					</div>
 				</section>
 
-				{/* Filter tabs */}
-				<StatusTabs current={filter} counts={counts} onChange={setFilter} />
-
-				{/* Empty / loading states */}
-				{messages === undefined && (
-					<div className="rounded-2xl bg-white p-12 text-center text-[#222529]/60 shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
-						Učitavanje…
+				{/* Sve poruke u jednoj beloj kartici sa filter tabovima */}
+				<div className="overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
+					{/* Filter tab bar — zaglavlje */}
+					<div className="border-b border-[#222529]/10 px-4 py-4 sm:px-6">
+						<StatusTabs current={filter} counts={counts} onChange={setFilter} />
 					</div>
-				)}
-				{messages !== undefined && messages.length === 0 && (
-					<div className="rounded-2xl bg-white p-12 text-center text-[#222529]/60 shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
-						Nema poruka za ovaj filter.
-					</div>
-				)}
 
-				{/* Desktop: tabela (lg+) */}
-				{messages && messages.length > 0 && (
-					<div className="hidden overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.18)] lg:block">
-						<div className="overflow-x-auto">
-							<table className="w-full text-left text-[14px] text-[#222529]">
+					{/* Sadržaj */}
+					{messages === undefined && (
+						<p className="p-12 text-center text-[#222529]/60">Učitavanje…</p>
+					)}
+					{messages !== undefined && messages.length === 0 && (
+						<p className="p-12 text-center text-[#222529]/60">
+							Nema poruka za ovaj filter.
+						</p>
+					)}
+
+					{/* Desktop: tabela (lg+) */}
+					{messages && messages.length > 0 && (
+						<div className="hidden lg:block">
+							<div className="overflow-x-auto">
+								<table className="w-full text-left text-[14px] text-[#222529]">
 								<thead className="bg-[#3d95b9]/10 text-[12px] tracking-wide text-[#3d95b9] uppercase">
 									<tr>
 										<th className="px-4 py-3 font-semibold">Vreme</th>
@@ -506,6 +588,7 @@ function AdminDashboard({
 						))}
 					</div>
 				)}
+				</div>
 			</div>
 			{editing && (
 				<EditMessageModal

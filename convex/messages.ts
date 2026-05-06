@@ -159,6 +159,49 @@ export const getWallSettings = query({
     return {
       rows: doc?.wallRows ?? DEFAULT_WALL_ROWS,
       cols: doc?.wallCols ?? DEFAULT_WALL_COLS,
+      theme: doc?.wallTheme ?? 'blue',
+      highlightedMessageId: doc?.highlightedMessageId ?? null,
+    }
+  },
+})
+
+export const setWallTheme = mutation({
+  args: {
+    adminPassword: v.string(),
+    theme: v.union(v.literal('blue'), v.literal('yellow')),
+  },
+  handler: async (ctx, args) => {
+    assertAdmin(args.adminPassword)
+    const existing = await ctx.db.query('settings').first()
+    if (existing) {
+      await ctx.db.patch(existing._id, { wallTheme: args.theme })
+    } else {
+      await ctx.db.insert('settings', {
+        wallRows: DEFAULT_WALL_ROWS,
+        wallCols: DEFAULT_WALL_COLS,
+        wallTheme: args.theme,
+      })
+    }
+  },
+})
+
+export const setHighlightedMessage = mutation({
+  args: {
+    adminPassword: v.string(),
+    messageId: v.union(v.id('messages'), v.null()),
+  },
+  handler: async (ctx, args) => {
+    assertAdmin(args.adminPassword)
+    const existing = await ctx.db.query('settings').first()
+    const value = args.messageId ?? undefined
+    if (existing) {
+      await ctx.db.patch(existing._id, { highlightedMessageId: value })
+    } else {
+      await ctx.db.insert('settings', {
+        wallRows: DEFAULT_WALL_ROWS,
+        wallCols: DEFAULT_WALL_COLS,
+        highlightedMessageId: value,
+      })
     }
   },
 })

@@ -25,5 +25,7 @@ export default defineSchema({
   settings: defineTable({
     wallRows: v.number(),
     wallCols: v.number(),
+    wallTheme: v.optional(v.union(v.literal('blue'), v.literal('yellow'))),
+    highlightedMessageId: v.optional(v.id('messages')),
   }),
 })
