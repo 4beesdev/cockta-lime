@@ -272,7 +272,6 @@ function AdminDashboard({
 	const setStatus = useMutation(api.messages.setMessageStatus);
 	const wallSettings = useQuery(api.messages.getWallSettings, {});
 	const setWallSettings = useMutation(api.messages.setWallSettings);
-	const setWallTheme = useMutation(api.messages.setWallTheme);
 	const setHighlightedMessage = useMutation(
 		api.messages.setHighlightedMessage,
 	);
@@ -286,12 +285,6 @@ function AdminDashboard({
 
 	const handleSetWallLayout = (rows: number, cols: number) => {
 		setWallSettings({ adminPassword: password, rows, cols }).catch((err) => {
-			toast.error(extractErrorMessage(err));
-		});
-	};
-
-	const handleSetTheme = (theme: "blue" | "yellow") => {
-		setWallTheme({ adminPassword: password, theme }).catch((err) => {
 			toast.error(extractErrorMessage(err));
 		});
 	};
@@ -468,32 +461,6 @@ function AdminDashboard({
 						</div>
 					</div>
 
-					{/* Tema isticanja */}
-					<div className="flex flex-col gap-2">
-						<h3 className="text-[13px] font-semibold tracking-wide text-white/80 uppercase">
-							Tema istaknute kartice
-						</h3>
-						<div className="flex flex-wrap gap-2">
-							{(["blue", "yellow"] as const).map((t) => {
-								const active = (wallSettings?.theme ?? "blue") === t;
-								return (
-									<button
-										key={t}
-										type="button"
-										onClick={() => handleSetTheme(t)}
-										className={`cursor-pointer rounded-full border-2 px-4 py-2 text-[14px] font-bold tracking-wide uppercase transition active:scale-[0.98] ${
-											active
-												? "border-[#f5cd21] bg-[#f5cd21] text-[#222529]"
-												: "border-white/60 bg-transparent text-white hover:bg-white/10"
-										}`}
-										style={{ fontFamily: FONT_CONDENSED }}
-									>
-										{t === "blue" ? "Plava" : "Žuta"}
-									</button>
-								);
-							})}
-						</div>
-					</div>
 				</section>
 
 				{/* Sve poruke u jednoj beloj kartici sa filter tabovima */}

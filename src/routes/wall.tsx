@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+import { LayoutGroup, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
@@ -24,7 +25,6 @@ function WallPage() {
 	const settings = useQuery(api.messages.getWallSettings, {});
 	const rows = settings?.rows ?? 3;
 	const cols = settings?.cols ?? 3;
-	const highlightTheme = settings?.theme ?? "blue";
 	const highlightedMessageId = settings?.highlightedMessageId ?? null;
 	const limit = rows * cols;
 
@@ -36,17 +36,27 @@ function WallPage() {
 		return () => clearInterval(id);
 	}, []);
 
-	// Round-robin raspodela poruka po kolonama (msg[0]→col 0, msg[1]→col 1, …)
+	// Round-robin raspodela; istaknuta uvek na top-left (msg[0])
 	const columnsData = useMemo<Doc<"messages">[][]>(() => {
 		const result: Doc<"messages">[][] = Array.from(
 			{ length: cols },
 			() => [],
 		);
-		messages?.forEach((msg, i) => {
+		if (!messages) return result;
+
+		const highlighted = highlightedMessageId
+			? (messages.find((m) => m._id === highlightedMessageId) ?? null)
+			: null;
+		const rest = highlighted
+			? messages.filter((m) => m._id !== highlightedMessageId)
+			: messages;
+		const ordered = highlighted ? [highlighted, ...rest] : rest;
+
+		ordered.forEach((msg, i) => {
 			result[i % cols].push(msg);
 		});
 		return result;
-	}, [messages, cols]);
+	}, [messages, cols, highlightedMessageId]);
 
 	return (
 		<main
@@ -81,7 +91,7 @@ function WallPage() {
 				<img
 					src="/figma/aj-lajm-ju-banner.svg"
 					alt="AJ ЛАЈМ ЈУ"
-					className="h-16 w-[166px] shrink-0 select-none"
+					className="h-16 w-41.5 shrink-0 select-none"
 				/>
 
 				<div className="relative flex flex-1 items-center justify-center gap-[8vw] text-[clamp(24px,2.6vw,40px)] leading-none font-bold tracking-tight text-white uppercase">
@@ -109,10 +119,13 @@ function WallPage() {
 					Čekamo prve poruke…
 				</div>
 			) : (
-				<section className="relative z-10 flex min-h-0 flex-1 gap-4 overflow-hidden px-6 py-12">
-					{messages === undefined
-						? Array.from({ length: cols }, (_, c) => `skeleton-col-${c}`).map(
-								(colKey) => (
+				<LayoutGroup>
+					<section className="relative z-10 flex min-h-0 flex-1 gap-4 overflow-hidden px-6 py-12">
+						{messages === undefined
+							? Array.from(
+									{ length: cols },
+									(_, c) => `skeleton-col-${c}`,
+								).map((colKey) => (
 									<div key={colKey} className="flex flex-1 flex-col gap-4">
 										{Array.from(
 											{ length: rows },
@@ -125,54 +138,25 @@ function WallPage() {
 											/>
 										))}
 									</div>
-								),
-							)
-						: columnsData.map((colMessages, colIdx) => (
-								<div
-									key={COLUMN_KEYS[colIdx]}
-									className="flex flex-1 flex-col gap-4"
-								>
-									{colMessages.map((msg, msgIdx) => (
-										<MessageCard
-											key={msg._id}
-											index={colIdx + msgIdx * cols}
-											recipient={msg.recipient}
-											text={msg.text}
-											signature={msg.signature}
-											createdAt={msg.createdAt}
-											isHighlighted={highlightedMessageId === msg._id}
-											highlightTheme={highlightTheme}
-										/>
-									))}
-								</div>
-							))}
-				</section>
+								))
+							: columnsData.map((colMessages, colIdx) => (
+									<MessageColumn
+										key={COLUMN_KEYS[colIdx]}
+										messages={colMessages}
+										highlightedMessageId={highlightedMessageId}
+									/>
+								))}
+					</section>
+				</LayoutGroup>
 			)}
 
-			{/* QR poziv — iznad footer-a */}
+			{/* QR poziv — iznad footer-a (jedna slika iz Figme) */}
 			<section className="relative z-10 flex w-full items-center justify-center px-6 py-2">
-				<div className="flex items-center">
-					<div className="flex h-8.5 items-center rounded-l-lg bg-[#aabd37] px-3 text-[clamp(11px,1vw,16px)] font-bold tracking-tight whitespace-nowrap text-white uppercase">
-						Skeniraj QR kod na narukvici
-					</div>
-					<img
-						src="/figma/qr-code.svg"
-						alt="QR kod"
-						className="size-18 shrink-0 select-none"
-					/>
-					<div className="flex h-8.5 items-center bg-[#aabd37] px-3 text-[clamp(11px,1vw,16px)] font-bold tracking-tight whitespace-nowrap text-white uppercase">
-						i pošalji poruku nekome ko ti se sviđa
-					</div>
-					<img
-						src="/figma/lime.svg"
-						alt=""
-						aria-hidden="true"
-						className="h-18 w-17.5 shrink-0 select-none"
-					/>
-					<div className="flex h-8.5 items-center rounded-r-lg bg-[#aabd37] px-3 text-[clamp(11px,1vw,16px)] font-bold tracking-tight whitespace-nowrap text-white uppercase">
-						#AjЛajmЈy
-					</div>
-				</div>
+				<img
+					src="/figma/qr-banner.png"
+					alt="Skeniraj QR kod na narukvici i pošalji poruku nekome ko ti se sviđa #AjЛajmЈy"
+					className="h-auto max-w-full select-none"
+				/>
 			</section>
 
 			{/* Footer marquee */}
@@ -208,48 +192,66 @@ function WallPage() {
 	);
 }
 
+function MessageColumn({
+	messages,
+	highlightedMessageId,
+}: {
+	messages: Doc<"messages">[];
+	highlightedMessageId: Doc<"messages">["_id"] | null;
+}) {
+	return (
+		<div className="flex flex-1 flex-col gap-4">
+			{messages.map((msg) => (
+				<MessageCard
+					key={msg._id}
+					cardId={msg._id}
+					recipient={msg.recipient}
+					text={msg.text}
+					signature={msg.signature}
+					createdAt={msg.createdAt}
+					isHighlighted={highlightedMessageId === msg._id}
+				/>
+			))}
+		</div>
+	);
+}
+
 function MessageCard({
-	index,
+	cardId,
 	recipient,
 	text,
 	signature,
 	createdAt,
 	isHighlighted,
-	highlightTheme,
 }: {
-	index: number;
+	cardId: string;
 	recipient: string;
 	text: string;
 	signature?: string;
 	createdAt: number;
 	isHighlighted: boolean;
-	highlightTheme: "blue" | "yellow";
 }) {
 	const time = useMemo(() => formatHHmm(new Date(createdAt)), [createdAt]);
 
-	const isYellow = highlightTheme === "yellow";
-	const bg = isHighlighted
-		? isYellow
-			? "#f8cc04"
-			: "#2e81a3"
-		: "#ffffff";
-	const borderColor = isHighlighted
-		? isYellow
-			? "#2e81a3"
-			: "#f8cd04"
-		: "#ffffff";
-	const recipientColor = isHighlighted
-		? isYellow
-			? "#3d95b9"
-			: "#f8cd04"
-		: "#3d95b9";
+	// Plava tema istaknute kartice (žuta tema je sklonjena)
+	const bg = isHighlighted ? "#2e81a3" : "#ffffff";
+	const borderColor = isHighlighted ? "#f8cd04" : "#ffffff";
+	const recipientColor = isHighlighted ? "#f8cd04" : "#3d95b9";
 	const textColor = isHighlighted ? "#ffffff" : "#222529";
 
 	return (
-		<div
-			className="card-enter relative flex flex-col gap-3 overflow-visible rounded-xl border-4 p-2 transition-[background-color,border-color,color] duration-700 ease-out"
+		<motion.div
+			layoutId={cardId}
+			layout
+			initial={{ scale: 0.4, rotate: -8 }}
+			animate={{ scale: 1, rotate: 0 }}
+			transition={{
+				layout: { duration: 0.6, ease: [0.4, 0, 0.2, 1] },
+				scale: { duration: 0.7, ease: [0.34, 1.56, 0.64, 1] },
+				rotate: { duration: 0.7, ease: [0.34, 1.56, 0.64, 1] },
+			}}
+			className="relative flex flex-col gap-3 overflow-visible rounded-xl border-4 p-2 transition-[background-color,border-color,color] duration-700 ease-out"
 			style={{
-				animationDelay: `${index * 80}ms`,
 				backgroundColor: bg,
 				borderColor: borderColor,
 				color: textColor,
@@ -267,26 +269,6 @@ function MessageCard({
 				}}
 			/>
 
-			{/* Srca u gornjem desnom uglu — oba u DOM-u, scale 0↔1 prema temi */}
-			{(["yellow", "blue"] as const).map((t) => {
-				const visible = isHighlighted && highlightTheme === t;
-				return (
-					<img
-						key={t}
-						src={t === "yellow" ? "/figma/heart-blue.svg" : "/figma/heart-yellow.svg"}
-						alt=""
-						aria-hidden="true"
-						className="pointer-events-none absolute -top-6 right-5 h-14.75 w-15.5 origin-center select-none transition-transform duration-700"
-						style={{
-							transform: visible ? "scale(1)" : "scale(0)",
-							transitionTimingFunction: visible
-								? "cubic-bezier(0.34, 1.56, 0.64, 1)"
-								: "cubic-bezier(0.4, 0, 0.6, 1)",
-						}}
-					/>
-				);
-			})}
-
 			<p
 				className="relative z-10 text-[clamp(11px,0.95vw,14px)] font-medium tracking-tight transition-colors duration-700 ease-out"
 				style={{
@@ -296,16 +278,13 @@ function MessageCard({
 			>
 				{recipient}
 			</p>
-			<p
-				className="relative z-10 text-[clamp(13px,1.1vw,16px)] leading-snug font-bold tracking-tight transition-[text-transform] duration-700"
-				style={{ textTransform: isHighlighted ? "uppercase" : "none" }}
-			>
-				{text}
+			<p className="relative z-10 text-[clamp(13px,1.1vw,16px)] leading-snug font-bold tracking-tight uppercase">
+				{text} #AjЛajmЈy
 			</p>
 			<div className="relative z-10 flex items-center justify-between gap-2 text-[clamp(10px,0.9vw,14px)] font-medium tracking-tight uppercase">
 				<span>{signature ?? ""}</span>
 				<span className="tabular-nums opacity-50">{time}</span>
 			</div>
-		</div>
+		</motion.div>
 	);
 }

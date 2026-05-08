@@ -165,26 +165,6 @@ export const getWallSettings = query({
   },
 })
 
-export const setWallTheme = mutation({
-  args: {
-    adminPassword: v.string(),
-    theme: v.union(v.literal('blue'), v.literal('yellow')),
-  },
-  handler: async (ctx, args) => {
-    assertAdmin(args.adminPassword)
-    const existing = await ctx.db.query('settings').first()
-    if (existing) {
-      await ctx.db.patch(existing._id, { wallTheme: args.theme })
-    } else {
-      await ctx.db.insert('settings', {
-        wallRows: DEFAULT_WALL_ROWS,
-        wallCols: DEFAULT_WALL_COLS,
-        wallTheme: args.theme,
-      })
-    }
-  },
-})
-
 export const setHighlightedMessage = mutation({
   args: {
     adminPassword: v.string(),
