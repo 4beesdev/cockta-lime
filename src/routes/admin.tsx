@@ -386,8 +386,8 @@ function AdminDashboard({
 				{/* Header */}
 				<header className="flex flex-wrap items-start justify-between gap-4">
 					<div>
-						<p className="mb-1 text-[12px] tracking-[0.3em] uppercase text-white/70">
-							AJ ЛАЈМ ЈУ
+						<p className="mb-1 text-[12px] tracking-[0.3em] text-white/70">
+							#AjЛajmЈy
 						</p>
 						<h1
 							className="text-[28px] leading-tight font-bold text-white"

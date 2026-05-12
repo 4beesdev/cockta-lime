@@ -95,14 +95,14 @@ function WallPage() {
 				/>
 
 				<div className="relative flex flex-1 items-center justify-center gap-[8vw] text-[clamp(24px,2.6vw,40px)] leading-none font-bold tracking-tight text-white uppercase">
-					<span>Tvoja poruka</span>
+					<span>Možda je neko</span>
 					<img
 						src="/figma/disco-ball.png"
 						alt=""
 						aria-hidden="true"
-						className="absolute top-1/2 left-1/2 h-[clamp(110px,12vw,220px)] -translate-x-1/2 -translate-y-[62%] select-none"
+						className="absolute top-1/2 left-[48%] h-[clamp(110px,12vw,220px)] -translate-x-1/2 -translate-y-[62%] select-none"
 					/>
-					<span>Njihov osmeh</span>
+					<span>pisao baš tebi?</span>
 				</div>
 
 				<div className="flex shrink-0 items-center gap-2.5 rounded-full border-2 border-white px-4 py-2">
@@ -179,7 +179,7 @@ function WallPage() {
 								className="h-5 w-21.25 shrink-0"
 							/>
 							<span
-								className="shrink-0 text-[16px] font-bold tracking-tight text-[#2e81a3] uppercase"
+								className="shrink-0 text-[16px] font-bold tracking-tight text-[#2e81a3] normal-case"
 								aria-hidden="true"
 							>
 								#AjЛajmЈy
@@ -279,7 +279,7 @@ function MessageCard({
 				{recipient}
 			</p>
 			<p className="relative z-10 text-[clamp(13px,1.1vw,16px)] leading-snug font-bold tracking-tight uppercase">
-				{text} #AjЛajmЈy
+				{text} <span className="normal-case">#AjЛajmЈy</span>
 			</p>
 			<div className="relative z-10 flex items-center justify-between gap-2 text-[clamp(10px,0.9vw,14px)] font-medium tracking-tight uppercase">
 				<span>{signature ?? ""}</span>

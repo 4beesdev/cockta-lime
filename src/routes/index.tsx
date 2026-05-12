@@ -10,9 +10,9 @@ export const Route = createFileRoute("/")({
 });
 
 const RECIPIENT_PLACEHOLDERS = [
-	"plava košulja na stage-u kod DJ-a",
+	"npr. osoba u plavoj košulji kod levog zvučnika",
 	"devojka koja igra u prvom redu",
-	"Jovani, zna ona koja je",
+	"tip sa žutim šeširom kod bara",
 ];
 
 const YELLOW_BUTTON_BG =
@@ -196,7 +196,7 @@ function HomePage() {
 					className="w-full text-center text-[24px] leading-tight font-bold text-white"
 					style={{ fontFamily: fontMono }}
 				>
-					Ako ti neko zapadne za oko ne moraš odmah da prilaziš.
+					Ako ti neko zapadne za oko, ne moraš odmah da kažeš „sviđaš mi se".
 				</h1>
 
 				{/* Yellow CTA + disco ball overlap */}
@@ -220,31 +220,14 @@ function HomePage() {
 					/>
 				</div>
 
-				{/* Subtext with yellow ring around "nešto više" */}
+				{/* Subtext */}
 				<p
 					className="w-full text-center text-[16px] leading-[24px] font-medium text-white"
 					style={{ fontFamily: fontMono }}
 				>
-					Možda ostane samo osmeh.
+					Možda izazoveš osmeh.
 					<br />
-					Možda{" "}
-					<span className="relative inline-block">
-						<span className="relative z-10">nešto više</span>
-						<svg
-							aria-hidden="true"
-							viewBox="0 0 129 32"
-							fill="none"
-							preserveAspectRatio="none"
-							className="pointer-events-none absolute -top-1 -left-2 h-[calc(100%+0.7rem)] w-[calc(100%+1.6rem)] overflow-visible"
-						>
-							<path
-								d="M64.5 1.5C22.362 1.5 1.5 7.99187 1.5 16C1.5 24.0081 23.4382 30.5 64.5 30.5C105.562 30.5 127.5 24.0081 127.5 16C127.5 8.30211 105.006 -0.1675 54.2881 6.2125"
-								stroke="#F5CD21"
-								strokeWidth="3"
-							/>
-						</svg>
-					</span>
-					. Na Jurci, to je sasvim dovoljno.
+					Možda se desi nešto više.
 				</p>
 
 				{/* AJ ЛАЈМ ЈУ logo block */}
@@ -253,7 +236,7 @@ function HomePage() {
 						className="text-center text-[16px] leading-[24px] font-medium whitespace-nowrap text-white"
 						style={{ fontFamily: fontMono }}
 					>
-						Za promenu, samo reci
+						Zabavi se i jednostavno reci
 					</p>
 					<img
 						src="/figma/aj-lajm-ju.svg"
@@ -264,7 +247,7 @@ function HomePage() {
 						className="text-center text-[16px] leading-[24px] font-medium whitespace-nowrap text-white"
 						style={{ fontFamily: fontMono }}
 					>
-						i baci pogled na wall u chill zoni.
+						i baci pogled na Cockta wall u chill zoni.
 					</p>
 				</div>
 
@@ -342,7 +325,7 @@ function HomePage() {
 										htmlFor={field.name}
 										className="text-[16px] leading-[26.56px] font-semibold text-white"
 									>
-										Kome šalješ?
+										Opiši osobu
 										<span className="ml-1 text-[#f5cd21]">*</span>
 									</label>
 									<input
@@ -398,7 +381,7 @@ function HomePage() {
 											value={field.state.value}
 											onBlur={field.handleBlur}
 											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="Napiši šta bi hteo/htela da kažeš"
+											placeholder="Kako tvoja poruka zvuči? Možda da je čekaš u chill zoni?"
 											maxLength={120}
 											rows={3}
 											className="h-22 w-full resize-none rounded-lg border border-white bg-white px-4.75 py-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
@@ -444,7 +427,7 @@ function HomePage() {
 										value={field.state.value}
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder="Inicijali, emoji, hint..."
+										placeholder="npr. baci neki emoji, inicijale ili hint."
 										maxLength={50}
 										className="h-14 w-full rounded-lg border border-white bg-white px-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
 									/>
@@ -463,6 +446,12 @@ function HomePage() {
 								{submitError}
 							</p>
 						)}
+
+						{/* Privacy disclaimer */}
+						<p className="text-center text-[12px] leading-4.5 text-white/80">
+							p.s. poštujemo zajedno pravila privatnosti, pa nemoj upisivati
+							lične podatke.
+						</p>
 
 						{/* Submit button */}
 						<form.Subscribe
