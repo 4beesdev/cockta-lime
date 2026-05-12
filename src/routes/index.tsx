@@ -233,7 +233,7 @@ function HomePage() {
 				{/* AJ ЛАЈМ ЈУ logo block */}
 				<div className="flex flex-col items-center gap-4">
 					<p
-						className="text-center text-[16px] leading-[24px] font-medium whitespace-nowrap text-white"
+						className="text-center text-[16px] leading-[24px] font-medium text-white"
 						style={{ fontFamily: fontMono }}
 					>
 						Zabavi se i jednostavno reci
@@ -244,7 +244,7 @@ function HomePage() {
 						className="h-25 w-64.75 max-w-full"
 					/>
 					<p
-						className="text-center text-[16px] leading-[24px] font-medium whitespace-nowrap text-white"
+						className="text-center text-[16px] leading-[24px] font-medium text-white"
 						style={{ fontFamily: fontMono }}
 					>
 						i baci pogled na Cockta wall u chill zoni.
