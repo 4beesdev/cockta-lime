@@ -11,8 +11,6 @@ export const Route = createFileRoute("/")({
 
 const RECIPIENT_PLACEHOLDERS = [
 	"npr. osoba u plavoj košulji kod levog zvučnika",
-	"devojka koja igra u prvom redu",
-	"tip sa žutim šeširom kod bara",
 ];
 
 const YELLOW_BUTTON_BG =
@@ -26,22 +24,6 @@ const SUCCESS_VARIANTS: ReadonlyArray<{ emoji: string; text: string }> = [
 		text: "Možda će videti.\nMožda će se prepoznati.",
 	},
 	{
-		emoji: "/figma/emoji/clinking-glasses.png",
-		text: "Nazdravljamo na slepo.\nSve je spremno.",
-	},
-	{
-		emoji: "/figma/emoji/bullseye.png",
-		text: "Cilj poslat.\nDa pogodi.",
-	},
-	{
-		emoji: "/figma/emoji/hourglass.png",
-		text: "Strpi se.\nNije dugo.",
-	},
-	{
-		emoji: "/figma/emoji/envelope.png",
-		text: "Stigla je.\nDalje znaš sam.",
-	},
-	{
 		emoji: "/figma/emoji/shush.png",
 		text: "Ti znaš.\nMi ćutimo.",
 	},
@@ -50,12 +32,24 @@ const SUCCESS_VARIANTS: ReadonlyArray<{ emoji: string; text: string }> = [
 		text: "Pesma traje.\nTvoja poruka takođe.",
 	},
 	{
-		emoji: "/figma/emoji/star.png",
-		text: "Bačeno gore.\nPadne gde padne.",
-	},
-	{
 		emoji: "/figma/emoji/herb.png",
 		text: "Sve je u redu.\nDiši.",
+	},
+	{
+		emoji: "/figma/emoji/four-leaf-clover.png",
+		text: "Možda ti se sreća osmehne.",
+	},
+	{
+		emoji: "/figma/cockta-can.png",
+		text: "Sad se opusti, Cockta će to da ti završi.",
+	},
+	{
+		emoji: "/figma/emoji/woman-dancing.png",
+		text: "Idi sad đuskaj, posle pitaj ove iz Cockte jel te neko tražio.",
+	},
+	{
+		emoji: "/figma/emoji/palm-tree.png",
+		text: "Idi u chill zonu, zableji malo, možda se pojavi tamo.",
 	},
 ];
 
@@ -110,9 +104,7 @@ function HomePage() {
 				});
 			} catch (err) {
 				const message =
-					err instanceof Error
-						? err.message
-						: "Nešto je puklo, probaj ponovo.";
+					err instanceof Error ? err.message : "Nešto je puklo, probaj ponovo.";
 				setSubmitError(message);
 				toast.error(message);
 			}
@@ -269,18 +261,13 @@ function HomePage() {
 									{SUCCESS_VARIANTS[submittedVariant].text}
 								</p>
 							</div>
-							<div className="flex w-full flex-col items-center gap-3">
+							<div className="flex w-full flex-col items-center gap-4">
 								<p
-									className="text-center text-[18px] leading-none font-medium text-white uppercase"
+									className="text-center text-[18px] leading-tight font-medium text-white uppercase"
 									style={{ fontFamily: fontCondensed }}
 								>
-									Idi do wall-a da vidiš svoju poruku…
-								</p>
-								<p
-									className="text-center text-[18px] leading-none font-medium text-white uppercase"
-									style={{ fontFamily: fontCondensed }}
-								>
-									ili
+									Poruka je kod moderatora — uskoro je potraži na wall-u u
+									chill zoni.
 								</p>
 								<button
 									type="button"
@@ -293,103 +280,52 @@ function HomePage() {
 							</div>
 						</div>
 					) : (
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							form.handleSubmit();
-						}}
-						className="flex flex-col gap-6"
-						noValidate
-					>
-						{/* Field: Recipient */}
-						<form.Field
-							name="recipient"
-							validators={{
-								onMount: ({ value }) =>
-									!value || value.trim().length < 1
-										? "Upiši kome šalješ."
-										: undefined,
-								onChange: ({ value }) => {
-									if (!value || value.trim().length < 1)
-										return "Upiši kome šalješ.";
-									if (value.trim().length > 100)
-										return "Maksimalno 100 karaktera.";
-									return undefined;
-								},
+						<form
+							onSubmit={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								form.handleSubmit();
 							}}
+							className="flex flex-col gap-6"
+							noValidate
 						>
-							{(field) => (
-								<div className="flex w-full flex-col gap-2">
-									<label
-										htmlFor={field.name}
-										className="text-[16px] leading-[26.56px] font-semibold text-white"
-									>
-										Opiši osobu
-										<span className="ml-1 text-[#f5cd21]">*</span>
-									</label>
-									<input
-										id={field.name}
-										name={field.name}
-										type="text"
-										value={field.state.value}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder={recipientPlaceholder}
-										maxLength={100}
-										className="h-14 w-full rounded-lg border border-white bg-white px-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
-									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-sm text-[#f5cd21]">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
-								</div>
-							)}
-						</form.Field>
-
-						{/* Field: Message */}
-						<form.Field
-							name="text"
-							validators={{
-								onMount: ({ value }) =>
-									!value || value.trim().length < 1
-										? "Upiši poruku."
-										: undefined,
-								onChange: ({ value }) => {
-									if (!value || value.trim().length < 1) return "Upiši poruku.";
-									if (value.trim().length > 120)
-										return "Maksimalno 120 karaktera.";
-									return undefined;
-								},
-							}}
-						>
-							{(field) => {
-								const len = field.state.value.length;
-								return (
+							{/* Field: Recipient */}
+							<form.Field
+								name="recipient"
+								validators={{
+									onMount: ({ value }) =>
+										!value || value.trim().length < 1
+											? "Upiši kome šalješ."
+											: undefined,
+									onChange: ({ value }) => {
+										if (!value || value.trim().length < 1)
+											return "Upiši kome šalješ.";
+										if (value.trim().length > 100)
+											return "Maksimalno 100 karaktera.";
+										return undefined;
+									},
+								}}
+							>
+								{(field) => (
 									<div className="flex w-full flex-col gap-2">
 										<label
 											htmlFor={field.name}
 											className="text-[16px] leading-[26.56px] font-semibold text-white"
 										>
-											Poruka<span className="ml-1 text-[#f5cd21]">*</span>
+											Opiši osobu
+											<span className="ml-1 text-[#f5cd21]">*</span>
 										</label>
-										<textarea
+										<input
 											id={field.name}
 											name={field.name}
+											type="text"
 											value={field.state.value}
 											onBlur={field.handleBlur}
 											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="Kako tvoja poruka zvuči? Možda da je čekaš u chill zoni?"
-											maxLength={120}
-											rows={3}
-											className="h-22 w-full resize-none rounded-lg border border-white bg-white px-4.75 py-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
+											placeholder={recipientPlaceholder}
+											maxLength={100}
+											className="h-14 w-full rounded-lg border border-white bg-white px-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
 										/>
-										<div className="flex items-center justify-between text-[14px] tracking-tight text-white">
-											<span>#AjЛajmЈy</span>
-											<span className="tabular-nums">{len}/120</span>
-										</div>
 										{field.state.meta.isTouched &&
 											field.state.meta.errors.length > 0 && (
 												<p className="text-sm text-[#f5cd21]">
@@ -397,81 +333,133 @@ function HomePage() {
 												</p>
 											)}
 									</div>
-								);
-							}}
-						</form.Field>
+								)}
+							</form.Field>
 
-						{/* Field: Signature */}
-						<form.Field
-							name="signature"
-							validators={{
-								onChange: ({ value }) => {
-									if (value && value.length > 50)
-										return "Maksimalno 50 karaktera.";
-									return undefined;
-								},
-							}}
-						>
-							{(field) => (
-								<div className="flex w-full flex-col gap-2">
-									<label
-										htmlFor={field.name}
-										className="text-[16px] leading-[26.56px] font-semibold text-white"
-									>
-										Potpis (opciono)
-									</label>
-									<input
-										id={field.name}
-										name={field.name}
-										type="text"
-										value={field.state.value}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder="npr. baci neki emoji, inicijale ili hint."
-										maxLength={50}
-										className="h-14 w-full rounded-lg border border-white bg-white px-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
-									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-sm text-[#f5cd21]">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
-								</div>
+							{/* Field: Message */}
+							<form.Field
+								name="text"
+								validators={{
+									onMount: ({ value }) =>
+										!value || value.trim().length < 1
+											? "Upiši poruku."
+											: undefined,
+									onChange: ({ value }) => {
+										if (!value || value.trim().length < 1)
+											return "Upiši poruku.";
+										if (value.trim().length > 120)
+											return "Maksimalno 120 karaktera.";
+										return undefined;
+									},
+								}}
+							>
+								{(field) => {
+									const len = field.state.value.length;
+									return (
+										<div className="flex w-full flex-col gap-2">
+											<label
+												htmlFor={field.name}
+												className="text-[16px] leading-[26.56px] font-semibold text-white"
+											>
+												Poruka<span className="ml-1 text-[#f5cd21]">*</span>
+											</label>
+											<textarea
+												id={field.name}
+												name={field.name}
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+												placeholder="Kako tvoja poruka zvuči? Možda da je čekaš u chill zoni?"
+												maxLength={120}
+												rows={3}
+												className="h-22 w-full resize-none rounded-lg border border-white bg-white px-4.75 py-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
+											/>
+											<div className="flex items-center justify-between text-[14px] tracking-tight text-white">
+												<span>#AjЛajmЈy</span>
+												<span className="tabular-nums">{len}/120</span>
+											</div>
+											{field.state.meta.isTouched &&
+												field.state.meta.errors.length > 0 && (
+													<p className="text-sm text-[#f5cd21]">
+														{field.state.meta.errors[0]}
+													</p>
+												)}
+										</div>
+									);
+								}}
+							</form.Field>
+
+							{/* Field: Signature */}
+							<form.Field
+								name="signature"
+								validators={{
+									onChange: ({ value }) => {
+										if (value && value.length > 50)
+											return "Maksimalno 50 karaktera.";
+										return undefined;
+									},
+								}}
+							>
+								{(field) => (
+									<div className="flex w-full flex-col gap-2">
+										<label
+											htmlFor={field.name}
+											className="text-[16px] leading-[26.56px] font-semibold text-white"
+										>
+											Potpis (opciono)
+										</label>
+										<input
+											id={field.name}
+											name={field.name}
+											type="text"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+											placeholder="npr. baci neki emoji, inicijale ili hint."
+											maxLength={50}
+											className="h-14 w-full rounded-lg border border-white bg-white px-4.75 text-[14px] tracking-tight text-[#222529] placeholder:text-[#222529]/60 outline-none transition focus:border-[#f5cd21] focus:ring-2 focus:ring-[#f5cd21]/40"
+										/>
+										{field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0 && (
+												<p className="text-sm text-[#f5cd21]">
+													{field.state.meta.errors[0]}
+												</p>
+											)}
+									</div>
+								)}
+							</form.Field>
+
+							{submitError && (
+								<p className="text-center text-sm text-[#f5cd21]">
+									{submitError}
+								</p>
 							)}
-						</form.Field>
 
-						{submitError && (
-							<p className="text-center text-sm text-[#f5cd21]">
-								{submitError}
+							{/* Privacy disclaimer */}
+							<p className="text-center text-[12px] leading-4.5 text-white/80">
+								p.s. poštujemo zajedno pravila privatnosti, pa nemoj upisivati
+								lične podatke.
 							</p>
-						)}
 
-						{/* Privacy disclaimer */}
-						<p className="text-center text-[12px] leading-4.5 text-white/80">
-							p.s. poštujemo zajedno pravila privatnosti, pa nemoj upisivati
-							lične podatke.
-						</p>
-
-						{/* Submit button */}
-						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isSubmitting]}
-						>
-							{([canSubmit, isSubmitting]) => (
-								<button
-									type="submit"
-									disabled={!canSubmit || isSubmitting}
-									className="w-full cursor-pointer rounded-[12px] px-6 py-4.25 text-[18px] font-bold tracking-wide text-[#222529] uppercase shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-									style={{
-										backgroundImage: YELLOW_BUTTON_BG,
-										fontFamily: fontCondensed,
-									}}
-								>
-									{isSubmitting ? "Šaljem…" : "Pošalji"}
-								</button>
-							)}
-						</form.Subscribe>
-					</form>
+							{/* Submit button */}
+							<form.Subscribe
+								selector={(state) => [state.canSubmit, state.isSubmitting]}
+							>
+								{([canSubmit, isSubmitting]) => (
+									<button
+										type="submit"
+										disabled={!canSubmit || isSubmitting}
+										className="w-full cursor-pointer rounded-[12px] px-6 py-4.25 text-[18px] font-bold tracking-wide text-[#222529] uppercase shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+										style={{
+											backgroundImage: YELLOW_BUTTON_BG,
+											fontFamily: fontCondensed,
+										}}
+									>
+										{isSubmitting ? "Šaljem…" : "Pošalji"}
+									</button>
+								)}
+							</form.Subscribe>
+						</form>
 					)}
 				</div>
 			</div>
