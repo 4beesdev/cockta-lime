@@ -9,15 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WallRouteImport } from './routes/wall'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TokenWallRouteImport } from './routes/$token/wall'
 
-const WallRoute = WallRouteImport.update({
-  id: '/wall',
-  path: '/wall',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -28,46 +23,44 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TokenWallRoute = TokenWallRouteImport.update({
+  id: '/$token/wall',
+  path: '/$token/wall',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/wall': typeof WallRoute
+  '/$token/wall': typeof TokenWallRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/wall': typeof WallRoute
+  '/$token/wall': typeof TokenWallRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/wall': typeof WallRoute
+  '/$token/wall': typeof TokenWallRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/wall'
+  fullPaths: '/' | '/admin' | '/$token/wall'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/wall'
-  id: '__root__' | '/' | '/admin' | '/wall'
+  to: '/' | '/admin' | '/$token/wall'
+  id: '__root__' | '/' | '/admin' | '/$token/wall'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  WallRoute: typeof WallRoute
+  TokenWallRoute: typeof TokenWallRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/wall': {
-      id: '/wall'
-      path: '/wall'
-      fullPath: '/wall'
-      preLoaderRoute: typeof WallRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -82,13 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$token/wall': {
+      id: '/$token/wall'
+      path: '/$token/wall'
+      fullPath: '/$token/wall'
+      preLoaderRoute: typeof TokenWallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  WallRoute: WallRoute,
+  TokenWallRoute: TokenWallRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -2,12 +2,40 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { LayoutGroup, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../../convex/_generated/api";
-import type { Doc } from "../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
+import type { Doc } from "../../../convex/_generated/dataModel";
 
-export const Route = createFileRoute("/wall")({
-	component: WallPage,
+// Random token koji štiti wall od slučajnih poseta.
+// Pristup: /<WALL_TOKEN>/wall
+const WALL_TOKEN = "9k7Xm2Pq4nT8wRyZb6cN3vJh";
+
+export const Route = createFileRoute("/$token/wall")({
+	component: WallRoute,
 });
+
+function WallRoute() {
+	const { token } = Route.useParams();
+	if (token !== WALL_TOKEN) return <WallNotFound />;
+	return <WallPage />;
+}
+
+function WallNotFound() {
+	return (
+		<main
+			className="flex min-h-svh w-full items-center justify-center bg-[#46aad3] px-6 text-center text-white"
+			style={{ fontFamily: "'Roboto Mono', ui-monospace, monospace" }}
+		>
+			<div className="flex flex-col items-center gap-3">
+				<p className="text-[clamp(48px,8vw,96px)] font-bold leading-none">
+					404
+				</p>
+				<p className="text-[clamp(16px,2vw,24px)] font-medium opacity-80">
+					Stranica ne postoji.
+				</p>
+			</div>
+		</main>
+	);
+}
 
 const FONT_MONO = "'Roboto Mono', ui-monospace, monospace";
 
