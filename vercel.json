@@ -3,6 +3,11 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist/client",
   "framework": null,
+  "functions": {
+    "api/server.mjs": {
+      "includeFiles": "dist/server/**"
+    }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/server" }
   ]

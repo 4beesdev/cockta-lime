@@ -1,7 +1,48 @@
 import server from '../dist/server/server.js'
 
-export default async function handler(request) {
-  return server.fetch(request)
+export default async function handler(req, res) {
+  const protocol = req.headers['x-forwarded-proto'] || 'https'
+  const host = req.headers['x-forwarded-host'] || req.headers.host
+  const url = `${protocol}://${host}${req.url}`
+
+  const headers = new Headers()
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (Array.isArray(value)) {
+      for (const v of value) headers.append(key, v)
+    } else if (value !== undefined) {
+      headers.set(key, value)
+    }
+  }
+
+  const method = req.method ?? 'GET'
+  const hasBody = method !== 'GET' && method !== 'HEAD'
+  const request = new Request(url, {
+    method,
+    headers,
+    body: hasBody ? req : undefined,
+    duplex: 'half',
+  })
+
+  const response = await server.fetch(request)
+
+  res.statusCode = response.status
+  response.headers.forEach((value, key) => {
+    res.setHeader(key, value)
+  })
+
+  if (response.body) {
+    const reader = response.body.getReader()
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        res.write(value)
+      }
+    } finally {
+      reader.releaseLock()
+    }
+  }
+  res.end()
 }
 
 export const config = {
